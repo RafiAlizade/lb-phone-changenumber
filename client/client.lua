@@ -1,8 +1,10 @@
+-- Developed by rafializade
+
 local Core = nil
 
 local function Msg(key, ...)
-    local lang = Config.Locale or 'az'
-    local dict = Config.Messages[lang] or Config.Messages['az'] or Config.Messages['en']
+    local lang = Config.Locale or 'en'
+    local dict = Config.Messages[lang] or Config.Messages['en'] or Config.Messages['az']
     local text = dict[key] or key
     if select('#', ...) > 0 then
         return string.format(text, ...)
@@ -33,7 +35,7 @@ local function ShowNotification(message, msgType)
 
     if (notifyMode == 'auto' or notifyMode == 'ox_lib') and GetResourceState('ox_lib') == 'started' then
         lib.notify({
-            title = Msg('phone_title') or 'Telefon Sistemi',
+            title = Msg('phone_title') or 'Phone System',
             description = message,
             type = msgType,
             position = 'top-right',
@@ -47,16 +49,16 @@ local function ShowNotification(message, msgType)
         TriggerEvent('chat:addMessage', {
             color = { 0, 150, 255 },
             multiline = true,
-            args = { 'SİSTEM', message }
+            args = { 'SYSTEM', message }
         })
     end
 end
 
-RegisterNetEvent('rafializade-changephonenumber:client:notify', function(message, msgType)
+RegisterNetEvent('lb-phone-changenumber:client:notify', function(message, msgType)
     ShowNotification(message, msgType)
 end)
 
-RegisterNetEvent('rafializade-changephonenumber:client:reloadPhone', function(newNumber)
+RegisterNetEvent('lb-phone-changenumber:client:reloadPhone', function(newNumber)
     if GetResourceState('lb-phone') == 'started' then
         exports['lb-phone']:ReloadPhone()
 

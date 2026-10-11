@@ -1,10 +1,12 @@
+-- Developed by rafializade
+
 local Core = nil
 local Framework = 'standalone'
 local IsQbox = false
 
 local function Msg(key, ...)
-    local lang = Config.Locale or 'az'
-    local dict = Config.Messages[lang] or Config.Messages['az'] or Config.Messages['en']
+    local lang = Config.Locale or 'en'
+    local dict = Config.Messages[lang] or Config.Messages['en'] or Config.Messages['az']
     local text = dict[key] or key
     if select('#', ...) > 0 then
         return string.format(text, ...)
@@ -71,7 +73,7 @@ local function GetPlayerNameFormatted(src, player)
             return player.getName()
         end
     end
-    return GetPlayerName(src) or 'Bilinmiyor'
+    return GetPlayerName(src) or 'Unknown'
 end
 
 local function Notify(src, message, msgType)
@@ -81,21 +83,11 @@ local function Notify(src, message, msgType)
         return
     end
 
-    TriggerClientEvent('rafializade-changephonenumber:client:notify', src, message, msgType or 'inform')
+    TriggerClientEvent('lb-phone-changenumber:client:notify', src, message, msgType or 'inform')
 end
 
--- --------------------------------------------------------------------------
--- lib.addCommand (ox_lib) - Restricted to group.god
--- --------------------------------------------------------------------------
-lib.addCommand(Config.Command or 'nomredeyisdir', {
-    help = Msg('command_help'),
-    params = {
-        { name = 'id',    type = 'playerId', help = Msg('param_id_help') },
-        { name = 'nomre', type = 'string',   help = Msg('param_nomre_help') },
-    },
-    restricted = Config.Restricted or 'group.god',
-}, function(source, args)
-    -- 1. Hedef Oyuncu
+local function ExecuteChangeNumber(source, args)
+    -- 1. Target Player Check
     local targetSrc = args.id
     local targetPlayer = GetPlayer(targetSrc)
     if not targetPlayer then
@@ -103,8 +95,8 @@ lib.addCommand(Config.Command or 'nomredeyisdir', {
         return
     end
 
-    -- 2. Yeni Numara Kontrolü
-    local newNumber = tostring(args.nomre):gsub('%s+', '') -- Boşlukları temizle
+    -- 2. New Phone Number Validation
+    local newNumber = tostring(args.nomre):gsub('%s+', '')
     if not string.match(newNumber, '^%d+$') then
         Notify(source, Msg('invalid_number'), 'error')
         return
@@ -112,10 +104,10 @@ lib.addCommand(Config.Command or 'nomredeyisdir', {
 
     local identifier = GetIdentifier(targetSrc, targetPlayer)
 
-    -- 3. Oyuncunun Mevcut Telefonunu phone_phones Tablosundan Bul
+    -- 3. Retrieve Target Phone from phone_phones
     local currentPhone = nil
 
-    -- a) LB-Phone'da aktif kullanılan numarayı sorgula
+    -- a) Query active equipped phone number in LB-Phone
     if GetResourceState('lb-phone') == 'started' then
         pcall(function()
             local equippedNumber = exports['lb-phone']:GetEquippedPhoneNumber(targetSrc)
@@ -127,14 +119,14 @@ lib.addCommand(Config.Command or 'nomredeyisdir', {
         end)
     end
 
-    -- b) Eğer bulunamadıysa owner_id (CitizenID) ile ara
+    -- b) Fallback lookup by owner_id (CitizenID/Identifier)
     if not currentPhone and identifier then
         currentPhone = MySQL.single.await(
             'SELECT id, owner_id, phone_number FROM phone_phones WHERE owner_id = ? ORDER BY last_seen DESC LIMIT 1',
             { identifier })
     end
 
-    -- c) id alanı citizenid olan kayıtları kontrol et
+    -- c) Fallback lookup by id
     if not currentPhone and identifier then
         currentPhone = MySQL.single.await(
             'SELECT id, owner_id, phone_number FROM phone_phones WHERE id = ? LIMIT 1',
@@ -148,35 +140,34 @@ lib.addCommand(Config.Command or 'nomredeyisdir', {
 
     local oldNumber = currentPhone.phone_number
 
-    -- 4. Aynı Numara Kontrolü
+    -- 4. Check for Identical Number
     if oldNumber == newNumber then
         Notify(source, Msg('same_number', oldNumber), 'error')
         return
     end
 
-    -- 5. Numara Başka Oyuncuda Var mı Kontrolü
+    -- 5. Check if Number is Taken by Another Player
     local exists = MySQL.scalar.await('SELECT 1 FROM phone_phones WHERE phone_number = ? LIMIT 1', { newNumber })
     if exists and exists > 0 then
         Notify(source, Msg('number_taken', newNumber), 'error')
         return
     end
 
-    -- 6. Veritabanı Güncellemeleri
-    -- a) phone_phones tablosundaki numarayı id üzerinden güncelle
+    -- 6. Database Updates
+    -- a) Update primary phone record in phone_phones
     local updated = MySQL.update.await('UPDATE phone_phones SET phone_number = ? WHERE id = ?',
         { newNumber, currentPhone.id })
     if not updated or updated <= 0 then
-        -- Alternatif olarak eski numara üzerinden güncelle
         MySQL.update.await('UPDATE phone_phones SET phone_number = ? WHERE phone_number = ?', { newNumber, oldNumber })
     end
 
-    -- b) phone_last_phone tablosu (varsa güncelle)
+    -- b) Update phone_last_phone
     pcall(function()
         MySQL.update.await('UPDATE phone_last_phone SET phone_number = ? WHERE phone_number = ?',
             { newNumber, oldNumber })
     end)
 
-    -- c) Framework veritabanı (players tablosundaki charinfo JSON alanı / ESX users tablosu)
+    -- c) Update framework database (players charinfo JSON / users table)
     if identifier then
         if IsQbox or Framework == 'qb' then
             pcall(function()
@@ -191,7 +182,7 @@ lib.addCommand(Config.Command or 'nomredeyisdir', {
         end
     end
 
-    -- d) Bellek içi (In-Memory) PlayerData güncellemesi
+    -- d) In-Memory PlayerData update
     if targetPlayer.PlayerData and targetPlayer.PlayerData.charinfo then
         targetPlayer.PlayerData.charinfo.phone = newNumber
 
@@ -208,22 +199,45 @@ lib.addCommand(Config.Command or 'nomredeyisdir', {
         end
     end
 
-    -- 7. LB-Phone State Bag & Client ReloadPhone Çağrısı
+    -- 7. Sync State Bag & Live Reload LB-Phone
     Player(targetSrc).state:set('phoneNumber', newNumber, true)
-    TriggerClientEvent('rafializade-changephonenumber:client:reloadPhone', targetSrc, newNumber)
+    TriggerClientEvent('lb-phone-changenumber:client:reloadPhone', targetSrc, newNumber)
 
-    -- 8. Geri Bildirimler
+    -- 8. Notifications & Console Log
     local targetName = GetPlayerNameFormatted(targetSrc, targetPlayer)
     Notify(source, Msg('admin_success', targetName, targetSrc, newNumber), 'success')
     Notify(targetSrc, Msg('target_success', newNumber), 'inform')
 
     print(string.format(
-        '^2[rafializade-changephonenumber]^7 Admin (%s), %s (ID: %d) adlı oyunçunun nömrəsini %s -> %s olaraq dəyişdirdi.^7',
+        '^2[lb-phone-changenumber]^7 Admin (%s) updated phone number for %s (ID: %d): %s -> %s^7',
         tostring(source), targetName, targetSrc, oldNumber, newNumber
     ))
-end)
+end
 
--- Sunucu Taraflı Export (Gerektiğinde diğer scriptlerden çağırmak için)
+-- --------------------------------------------------------------------------
+-- Command Registration (ox_lib addCommand)
+-- --------------------------------------------------------------------------
+local commandName = Config.Command or 'nomredeyisdir'
+local commandParams = {
+    help = Msg('command_help'),
+    params = {
+        { name = 'id',    type = 'playerId', help = Msg('param_id_help') },
+        { name = 'nomre', type = 'string',   help = Msg('param_nomre_help') },
+    },
+    restricted = Config.Restricted or 'group.god',
+}
+
+lib.addCommand(commandName, commandParams, ExecuteChangeNumber)
+
+if Config.Aliases and #Config.Aliases > 0 then
+    for _, alias in ipairs(Config.Aliases) do
+        lib.addCommand(alias, commandParams, ExecuteChangeNumber)
+    end
+end
+
+-- --------------------------------------------------------------------------
+-- Server Export
+-- --------------------------------------------------------------------------
 exports('ChangePhoneNumber', function(targetSrc, newNumber)
     local targetPlayer = GetPlayer(targetSrc)
     if not targetPlayer then return false, 'player_offline' end
@@ -284,7 +298,7 @@ exports('ChangePhoneNumber', function(targetSrc, newNumber)
     end
 
     Player(targetSrc).state:set('phoneNumber', newNumber, true)
-    TriggerClientEvent('rafializade-changephonenumber:client:reloadPhone', targetSrc, newNumber)
+    TriggerClientEvent('lb-phone-changenumber:client:reloadPhone', targetSrc, newNumber)
 
     return true, newNumber
 end)

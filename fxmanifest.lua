@@ -1,10 +1,10 @@
+-- Developed by rafializade
 fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
 
-name 'rafializade-changephonenumber'
-author 'rafializade'
-description 'LB-Phone Admin Phone Number Changer'
+name 'lb-phone-changenumber'
+description 'Live phone number changer for LB-Phone'
 version '1.0.0'
 
 shared_scripts {

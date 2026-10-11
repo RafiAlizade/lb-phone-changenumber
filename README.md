@@ -1,6 +1,7 @@
-# rafializade-changephonenumber
+<!-- Developed by rafializade -->
+# lb-phone-changenumber
 
-A lightweight, production-ready admin tool built with **ox_lib** to change player phone numbers for **LB-Phone** across **Qbox**, **QBCore**, and **ESX Legacy** frameworks.
+A lightweight, production-ready admin tool built with **ox_lib** to change player phone numbers live for **LB-Phone** across **Qbox**, **QBCore**, and **ESX Legacy** frameworks.
 
 ---
 
@@ -13,7 +14,7 @@ A lightweight, production-ready admin tool built with **ox_lib** to change playe
   - **Qbox / QBCore**: Updates `PlayerData.charinfo.phone` and the `charinfo` JSON column in the `players` table.
   - **ESX**: Updates `users.phone_number`.
 - **Conflict Prevention**: Validates target numbers against the database before applying changes to prevent `UNIQUE KEY` duplication errors.
-- **Multi-Language Support**: Configurable locale (`az`, `tr`, `en`).
+- **Multi-Language Support**: English by default (`en`), with built-in Azerbaijani (`az`) and Turkish (`tr`) locales.
 
 ---
 
@@ -31,15 +32,15 @@ A lightweight, production-ready admin tool built with **ox_lib** to change playe
 
 ## Installation
 
-1. Copy the `rafializade-changephonenumber` folder into your server's `resources/` directory.
+1. Place the `lb-phone-changenumber` folder into your server's `resources/` directory.
 2. Add the following to your `server.cfg` (ensure it starts **after** `ox_lib`, `oxmysql`, and `lb-phone`):
    ```cfg
    ensure ox_lib
    ensure oxmysql
    ensure lb-phone
-   ensure rafializade-changephonenumber
+   ensure lb-phone-changenumber
    ```
-3. Restart your server or run `refresh` and `ensure rafializade-changephonenumber` in the server console.
+3. Restart your server or run `refresh` and `ensure lb-phone-changenumber` in the server console.
 
 ---
 
@@ -48,6 +49,8 @@ A lightweight, production-ready admin tool built with **ox_lib** to change playe
 ```
 /nomredeyisdir [player_id] [new_phone_number]
 ```
+
+*(You can also use `/changenumber` or `/setnumber`)*
 
 ### Example:
 - `/nomredeyisdir 1 5209876543`
@@ -64,6 +67,7 @@ Config.Framework = 'auto'
 
 -- Command name (ox_lib addCommand)
 Config.Command = 'nomredeyisdir'
+Config.Aliases = { 'changenumber', 'setnumber', 'setphonenumber' }
 Config.Restricted = 'group.god' -- Permission group
 
 -- Notifications: 'auto', 'ox_lib', 'qb', 'esx', 'chat'
@@ -72,8 +76,8 @@ Config.Notify = 'auto'
 -- In-Phone Push Notification (LB-Phone)
 Config.SendPhoneNotification = true
 
--- Active Language: 'az', 'tr', 'en'
-Config.Locale = 'az'
+-- Active Language: 'en' (default), 'az', 'tr'
+Config.Locale = 'en'
 ```
 
 ---
@@ -101,5 +105,5 @@ UPDATE `phone_phones` SET `id` = `owner_id`;
 
 ### Server-side
 ```lua
-local success, result = exports['rafializade-changephonenumber']:ChangePhoneNumber(targetId, '5209876543')
+local success, result = exports['lb-phone-changenumber']:ChangePhoneNumber(targetId, '5209876543')
 ```

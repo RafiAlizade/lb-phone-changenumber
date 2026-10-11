@@ -1,26 +1,27 @@
-# cfx-crp-changephonenumber
+# rafializade-changephonenumber
 
-A lightweight, production-ready admin tool to change player phone numbers for **LB-Phone** across **Qbox**, **QBCore**, and **ESX Legacy** frameworks.
+A lightweight, production-ready admin tool built with **ox_lib** to change player phone numbers for **LB-Phone** across **Qbox**, **QBCore**, and **ESX Legacy** frameworks.
 
 ---
 
 ## Features
 
+- **ox_lib Command (`lib.addCommand`)**: Uses `ox_lib` parameter validation and permission restriction (`restricted = 'group.god'`).
 - **Direct LB-Phone Integration**: Updates the `phone_phones` table, preserving all user data (messages, photos, contacts, notes) through MySQL foreign key cascades.
 - **Client Live Reload**: Triggers `exports["lb-phone"]:ReloadPhone()` on the target player's client immediately. No reconnects or relogs required.
 - **Multi-Framework Sync**: Updates player metadata and persistent database records:
   - **Qbox / QBCore**: Updates `PlayerData.charinfo.phone` and the `charinfo` JSON column in the `players` table.
   - **ESX**: Updates `users.phone_number`.
-- **Permission-Protected**: Restricted to high-tier administrative ranks (configurable, default: `god`). Supports both framework group checks and FiveM ACE permissions (`group.god`).
 - **Conflict Prevention**: Validates target numbers against the database before applying changes to prevent `UNIQUE KEY` duplication errors.
-- **Multi-Language Support**: Comes with built-in English, Turkish, and Azerbaijani locale dictionaries.
+- **Multi-Language Support**: Configurable locale (`az`, `tr`, `en`).
 
 ---
 
 ## Requirements
 
-- [lb-phone](https://lbscripts.com/)
+- [ox_lib](https://github.com/overextended/ox_lib)
 - [oxmysql](https://github.com/overextended/oxmysql)
+- [lb-phone](https://lbscripts.com/)
 - One of the supported frameworks:
   - [Qbox](https://github.com/Qbox-project/qbx_core)
   - [QBCore](https://github.com/qbcore-framework/qb-core)
@@ -30,27 +31,26 @@ A lightweight, production-ready admin tool to change player phone numbers for **
 
 ## Installation
 
-1. Copy the `cfx-crp-changephonenumber` folder into your server's `resources/` directory.
-2. Add the following to your `server.cfg` (ensure it starts **after** `lb-phone` and `oxmysql`):
+1. Copy the `rafializade-changephonenumber` folder into your server's `resources/` directory.
+2. Add the following to your `server.cfg` (ensure it starts **after** `ox_lib`, `oxmysql`, and `lb-phone`):
    ```cfg
+   ensure ox_lib
    ensure oxmysql
    ensure lb-phone
-   ensure cfx-crp-changephonenumber
+   ensure rafializade-changephonenumber
    ```
-3. Restart your server or run `refresh` and `ensure cfx-crp-changephonenumber` in server console.
+3. Restart your server or run `refresh` and `ensure rafializade-changephonenumber` in the server console.
 
 ---
 
 ## Usage
 
 ```
-/changenumber [player_id] [new_phone_number]
+/nomredeyisdir [player_id] [new_phone_number]
 ```
 
-### Examples:
-- `/changenumber 1 5209876543`
-- `/setphonenumber 1 4801234567` (using alias)
-- `/nomredeyisdir 1 2051234567` (using alias)
+### Example:
+- `/nomredeyisdir 1 5209876543`
 
 ---
 
@@ -62,23 +62,18 @@ Config = {}
 -- Framework: 'auto', 'qbox', 'qb', 'esx'
 Config.Framework = 'auto'
 
--- Command name and aliases
-Config.Command = 'changenumber'
-Config.Aliases = { 'setphonenumber', 'setnumber', 'nomredeyisdir' }
-
--- Permissions (e.g., 'god', 'admin', 'superadmin')
-Config.Permission = 'god'
-Config.UseAcePermission = true -- Also check group.god or command.changenumber
+-- Command name (ox_lib addCommand)
+Config.Command = 'nomredeyisdir'
+Config.Restricted = 'group.god' -- Permission group
 
 -- Notifications: 'auto', 'ox_lib', 'qb', 'esx', 'chat'
 Config.Notify = 'auto'
 
--- Database & sync options
-Config.SyncFrameworkData = true     -- Sync PlayerData & players/users tables
-Config.SendPhoneNotification = true -- Send push notification to target player's phone
+-- In-Phone Push Notification (LB-Phone)
+Config.SendPhoneNotification = true
 
--- Language: 'en', 'tr', 'az'
-Config.Locale = 'en'
+-- Active Language: 'az', 'tr', 'en'
+Config.Locale = 'az'
 ```
 
 ---
@@ -87,7 +82,7 @@ Config.Locale = 'en'
 
 If your server previously used unique phones with random phone IDs (e.g. `11W47`), you can align all phone records to use `id = owner_id` (CitizenID/Identifier) as expected by LB-Phone in non-unique mode.
 
-Run the queries provided in `fix_phone_ids.sql` in HeidiSQL or your database management tool:
+Run the queries provided in `fix_phone_ids.sql` in HeidiSQL:
 
 ```sql
 -- 1. Remove older duplicate phones for the same owner (preserves the most recent one):
@@ -106,5 +101,5 @@ UPDATE `phone_phones` SET `id` = `owner_id`;
 
 ### Server-side
 ```lua
-local success, result = exports['cfx-crp-changephonenumber']:ChangePhoneNumber(targetId, '5209876543')
+local success, result = exports['rafializade-changephonenumber']:ChangePhoneNumber(targetId, '5209876543')
 ```

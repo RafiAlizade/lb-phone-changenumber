@@ -1,5 +1,5 @@
 -- ============================================================================
--- CFX-CRP-CHANGEPHONENUMBER | FIX PHONE_PHONES ID -> OWNER_ID
+-- RAFIALIZADE-CHANGEPHONENUMBER | FIX PHONE_PHONES ID -> OWNER_ID
 -- ============================================================================
 -- When LB-Phone runs with UniquePhones = false, each player's phone `id`
 -- should match their CitizenID / Player Identifier (`owner_id`).

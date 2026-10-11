@@ -1,65 +1,65 @@
 Config = {}
 
--- Framework Detection: 'auto', 'qbox', 'qb', 'esx'
+-- Framework: 'auto', 'qbox', 'qb', 'esx'
 Config.Framework = 'auto'
 
--- Command Configuration
-Config.Command = 'changenumber' -- Main command name
-Config.Aliases = { 'setphonenumber', 'setnumber', 'nomredeyisdir' } -- Alternative command aliases
+-- Command Configuration (ox_lib addCommand)
+Config.Command = 'nomredeyisdir'
+Config.Restricted = 'group.god' -- Permission group (e.g. 'group.god', 'group.admin')
 
--- Permissions
--- Players with this group (or console) can execute the command
-Config.Permission = 'god' -- 'god', 'admin', or any framework rank
-Config.UseAcePermission = true -- Also check ACE permission (e.g., group.god or command.changenumber)
-
--- Notification System: 'auto', 'ox_lib', 'qb', 'esx', 'chat'
+-- Notification Mode: 'auto', 'ox_lib', 'qb', 'esx', 'chat'
 Config.Notify = 'auto'
 
--- Database & Sync Options
-Config.SyncFrameworkData = true -- Sync PlayerData & players/users database tables
-Config.SendPhoneNotification = true -- Send LB-Phone push notification to target player
+-- In-Phone Push Notification (LB-Phone)
+Config.SendPhoneNotification = true
 
--- Language: 'en' (English), 'tr' (Turkish), 'az' (Azerbaijani)
-Config.Locale = 'en'
+-- Active Language: 'az' (Azerbaijani), 'tr' (Turkish), 'en' (English)
+Config.Locale = 'az'
 
-Config.Locales = {
-    ['en'] = {
-        no_permission = 'You do not have permission to use this command.',
-        usage = 'Usage: /%s [player_id] [new_phone_number]',
-        player_offline = 'Player is offline or invalid ID.',
-        phone_not_found = 'No registered phone found for this player.',
-        number_taken = 'Phone number (%s) is already in use.',
-        same_number = 'Target player already has this phone number (%s).',
-        invalid_number = 'Phone number must contain digits only.',
-        admin_success = 'Successfully changed phone number for %s (ID: %d) to %s.',
-        target_notify = 'Your phone number has been updated to: %s',
-        phone_notif_title = 'Network Carrier',
-        phone_notif_desc = 'Your SIM card has been updated. New number: %s'
+Config.Messages = {
+    ['az'] = {
+        command_help = 'Oyuncunun telefon nömrəsini dəyiş',
+        param_id_help = 'Oyunçu ID',
+        param_nomre_help = 'Yeni telefon nömrəsi',
+        no_permission = 'Bu komandadan yalnız group.god istifadə edə bilər!',
+        player_not_found = 'Qeyd olunan ID tapılmadı və ya oyunçu oyunda deyil!',
+        invalid_number = 'Nömrə yalnız rəqəmlərdən ibarət olmalıdır!',
+        phone_not_found = 'Bu oyunçunun sistemdə qeydiyyatlı telefonu tapılmadı!',
+        same_number = 'Oyunçu onsuz da bu nömrədən (%s) istifadə edir!',
+        number_taken = 'Bu telefon nömrəsi (%s) artıq başqa bir istifadəçi tərəfindən istifadə olunur!',
+        admin_success = '[UĞURLU] %s (ID: %d) adlı oyunçunun nömrəsi dəyişdirildi. Yeni nömrə: %s',
+        target_success = 'Admin tərəfindən telefon nömrəniz dəyişdirildi! Yeni nömrəniz: %s',
+        phone_title = 'Mobil Operator',
+        phone_notif = 'Nömrəniz uğurla yeniləndi: %s'
     },
     ['tr'] = {
-        no_permission = 'Bu komutu kullanmak için yetkiniz yok.',
-        usage = 'Kullanım: /%s [oyuncu_id] [yeni_numara]',
-        player_offline = 'Oyuncu çevrimdışı veya geçersiz ID.',
-        phone_not_found = 'Bu oyuncuya ait kayıtlı telefon bulunamadı.',
-        number_taken = 'Bu telefon numarası (%s) zaten kullanımda.',
-        same_number = 'Oyuncu zaten bu numarayı (%s) kullanıyor.',
-        invalid_number = 'Numara yalnızca rakamlardan oluşmalıdır.',
-        admin_success = '%s (ID: %d) adlı oyuncunun numarası başarıyla %s olarak güncellendi.',
-        target_notify = 'Telefon numaranız güncellendi: %s',
-        phone_notif_title = 'Hücresel Servis',
-        phone_notif_desc = 'Hattınız yenilendi. Yeni numaranız: %s'
+        command_help = 'Oyuncunun telefon numarasını değiştir',
+        param_id_help = 'Oyuncu ID',
+        param_nomre_help = 'Yeni telefon numarası',
+        no_permission = 'Bu komutu yalnızca group.god yetkisine sahip kişiler kullanabilir!',
+        player_not_found = 'Belirtilen ID bulunamadı veya oyuncu çevrimdışı!',
+        invalid_number = 'Numara yalnızca rakamlardan oluşmalıdır!',
+        phone_not_found = 'Bu oyuncuya ait kayıtlı telefon bulunamadı!',
+        same_number = 'Oyuncu zaten bu numarayı (%s) kullanıyor!',
+        number_taken = 'Bu telefon numarası (%s) zaten kullanımda!',
+        admin_success = '[BAŞARILI] %s (ID: %d) adlı oyuncunun numarası güncellendi. Yeni numara: %s',
+        target_notify = 'Yetkili tarafından telefon numaranız güncellendi! Yeni numaranız: %s',
+        phone_title = 'Hücresel Servis',
+        phone_notif = 'Hattınız yenilendi. Yeni numaranız: %s'
     },
-    ['az'] = {
-        no_permission = 'Bu komandadan istifadə etmək üçün yetkiniz yoxdur.',
-        usage = 'İstifadə qaydası: /%s [oyunçu_id] [yeni_nömrə]',
-        player_offline = 'Oyunçu oyunda deyil və ya ID yanlışdır.',
-        phone_not_found = 'Bu oyunçuya aid qeydiyyatlı telefon tapılmadı.',
-        number_taken = 'Bu telefon nömrəsi (%s) artıq istifadədədir.',
-        same_number = 'Oyunçu onsuz da bu nömrədən (%s) istifadə edir.',
-        invalid_number = 'Nömrə yalnız rəqəmlərdən ibarət olmalıdır.',
-        admin_success = '%s (ID: %d) adlı oyunçunun nömrəsi uğurla %s olaraq dəyişdirildi.',
-        target_notify = 'Telefon nömrəniz yeniləndi: %s',
-        phone_notif_title = 'Mobil Operator',
-        phone_notif_desc = 'Nömrəniz uğurla yeniləndi: %s'
+    ['en'] = {
+        command_help = 'Change player phone number',
+        param_id_help = 'Player ID',
+        param_nomre_help = 'New phone number',
+        no_permission = 'Only group.god can execute this command!',
+        player_not_found = 'Target player is offline or invalid ID!',
+        invalid_number = 'Phone number must contain digits only!',
+        phone_not_found = 'No registered phone found for this player!',
+        same_number = 'Player is already using this phone number (%s)!',
+        number_taken = 'Phone number (%s) is already in use!',
+        admin_success = '[SUCCESS] Changed phone number for %s (ID: %d). New number: %s',
+        target_success = 'Your phone number has been updated by an admin! New number: %s',
+        phone_title = 'Network Carrier',
+        phone_notif = 'Your phone number has been updated: %s'
     }
 }

@@ -2,12 +2,13 @@ fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
 
-name 'cfx-crp-changephonenumber'
-author 'Caucasus RP / refie'
-description 'LB-Phone Admin Phone Number Changer (/nomredeyisdir)'
+name 'rafializade-changephonenumber'
+author 'rafializade'
+description 'LB-Phone Admin Phone Number Changer'
 version '1.0.0'
 
 shared_scripts {
+    '@ox_lib/init.lua',
     'config.lua'
 }
 
@@ -21,5 +22,6 @@ server_scripts {
 }
 
 dependencies {
-    'oxmysql'
+    'oxmysql',
+    'ox_lib'
 }

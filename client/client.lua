@@ -1,12 +1,13 @@
 local Core = nil
 
-local function _L(key, ...)
-    local locale = Config.Locales[Config.Locale] or Config.Locales['en']
-    local str = locale[key] or key
+local function Msg(key, ...)
+    local lang = Config.Locale or 'az'
+    local dict = Config.Messages[lang] or Config.Messages['az'] or Config.Messages['en']
+    local text = dict[key] or key
     if select('#', ...) > 0 then
-        return string.format(str, ...)
+        return string.format(text, ...)
     end
-    return str
+    return text
 end
 
 CreateThread(function()
@@ -32,7 +33,7 @@ local function ShowNotification(message, msgType)
 
     if (notifyMode == 'auto' or notifyMode == 'ox_lib') and GetResourceState('ox_lib') == 'started' then
         lib.notify({
-            title = 'Phone System',
+            title = Msg('phone_title') or 'Telefon Sistemi',
             description = message,
             type = msgType,
             position = 'top-right',
@@ -46,24 +47,24 @@ local function ShowNotification(message, msgType)
         TriggerEvent('chat:addMessage', {
             color = { 0, 150, 255 },
             multiline = true,
-            args = { 'SYSTEM', message }
+            args = { 'SİSTEM', message }
         })
     end
 end
 
-RegisterNetEvent('cfx-crp-changephonenumber:client:notify', function(message, msgType)
+RegisterNetEvent('rafializade-changephonenumber:client:notify', function(message, msgType)
     ShowNotification(message, msgType)
 end)
 
-RegisterNetEvent('cfx-crp-changephonenumber:client:reloadPhone', function(newNumber)
+RegisterNetEvent('rafializade-changephonenumber:client:reloadPhone', function(newNumber)
     if GetResourceState('lb-phone') == 'started' then
         exports['lb-phone']:ReloadPhone()
 
         if Config.SendPhoneNotification then
             pcall(function()
                 exports['lb-phone']:SendNotification({
-                    title = _L('phone_notif_title'),
-                    content = _L('phone_notif_desc', newNumber),
+                    title = Msg('phone_title'),
+                    content = Msg('phone_notif', newNumber),
                     icon = 'phone',
                     duration = 5000
                 })
